@@ -16,14 +16,20 @@ exports.ChatResolver = void 0;
 const type_graphql_1 = require("type-graphql");
 const Chat_1 = require("../entities/Chat");
 const chats = [];
+const channel = "CHAT_CHANNEL";
 let ChatResolver = class ChatResolver {
     getChats() {
         return chats;
     }
-    createChat(name, message) {
+    async createChat(pubSub, name, message) {
         const chat = { id: chats.length + 1, name, message };
         chats.push(chat);
+        const payload = chat;
+        await pubSub.publish(channel, payload);
         return chat;
+    }
+    messageSent({ id, name, message }) {
+        return { id, name, message };
     }
 };
 __decorate([
@@ -34,12 +40,20 @@ __decorate([
 ], ChatResolver.prototype, "getChats", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => Chat_1.Chat),
-    __param(0, (0, type_graphql_1.Arg)("name")),
-    __param(1, (0, type_graphql_1.Arg)("message")),
+    __param(0, (0, type_graphql_1.PubSub)()),
+    __param(1, (0, type_graphql_1.Arg)("name")),
+    __param(2, (0, type_graphql_1.Arg)("message")),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
-    __metadata("design:returntype", Chat_1.Chat)
+    __metadata("design:paramtypes", [type_graphql_1.PubSubEngine, String, String]),
+    __metadata("design:returntype", Promise)
 ], ChatResolver.prototype, "createChat", null);
+__decorate([
+    (0, type_graphql_1.Subscription)({ topics: channel }),
+    __param(0, (0, type_graphql_1.Root)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Chat_1.Chat]),
+    __metadata("design:returntype", Chat_1.Chat)
+], ChatResolver.prototype, "messageSent", null);
 ChatResolver = __decorate([
     (0, type_graphql_1.Resolver)()
 ], ChatResolver);
